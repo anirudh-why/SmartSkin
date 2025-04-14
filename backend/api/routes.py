@@ -3,6 +3,7 @@ import os
 import base64
 from models.skincare_recommender import SkincareRecommender
 from models.ingredients_analyzer import IngredientsAnalyzer
+from models.routine_recommender import RoutineRecommender
 
 # Create blueprint for API routes
 api = Blueprint('api', __name__)
@@ -14,6 +15,7 @@ models_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'models', 
 # Initialize models lazily only when needed
 recommender = None
 analyzer = None
+routine_recommender = None
 
 def get_recommender():
     global recommender
@@ -53,6 +55,13 @@ def get_analyzer():
     if analyzer is None:
         analyzer = IngredientsAnalyzer(models_dir)
     return analyzer
+
+def get_routine_recommender():
+    global routine_recommender
+    if routine_recommender is None:
+        routine_data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'routine_data.csv')
+        routine_recommender = RoutineRecommender(data_path=routine_data_path, model_path=models_dir)
+    return routine_recommender
 
 @api.route('/recommender/metadata', methods=['GET'])
 def get_metadata():
@@ -144,6 +153,57 @@ def analyze_ingredients_text():
             'suitability_scores': suitability_scores,
             'best_for': best_skin_type[0],
             'best_score': best_skin_type[1]
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e), 'success': False}), 500
+
+@api.route('/routine/metadata', methods=['GET'])
+def get_routine_metadata():
+    """Get all metadata needed for the routine recommendation form."""
+    try:
+        routine_rec = get_routine_recommender()
+        routine_metadata = {
+            'skin_types': routine_rec.skin_types,
+            'skin_concerns': routine_rec.skin_concerns,
+            'climate_options': list(routine_rec.weather_adaptations.keys())
+        }
+        return jsonify(routine_metadata)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api.route('/routine/recommendations', methods=['POST'])
+def get_routine_recommendations():
+    """Get personalized skincare routine based on user preferences."""
+    data = request.json
+    
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    try:
+        # Validate input data
+        user_data = {
+            'skin_type': data.get('skin_type', 'Normal'),
+            'skin_concerns': data.get('skin_concerns', []),
+            'allergies': data.get('allergies', []),
+            'climate': data.get('climate', 'mild'),
+            'age': data.get('age', 30)
+        }
+        
+        # Get skincare routine
+        routine_rec = get_routine_recommender()
+        routine = routine_rec.get_personalized_routine(user_data)
+        
+        # If product recommendations requested, add them to the routine
+        if data.get('include_products', True):
+            rec = get_recommender()
+            df = rec.df
+            routine = routine_rec.get_product_recommendations(routine, df)
+        
+        return jsonify({
+            'success': True,
+            'routine': routine,
+            'user_data': user_data
         })
     
     except Exception as e:

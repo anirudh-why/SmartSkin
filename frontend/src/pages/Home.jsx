@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Button from '../components/Button';
-import { SparklesIcon, BeakerIcon } from '@heroicons/react/24/outline';
+import { SparklesIcon, BeakerIcon, CalendarIcon } from '@heroicons/react/24/outline';
 
 function Home() {
   return (
@@ -87,7 +87,7 @@ function Home() {
           </div>
 
           <div className="mt-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Feature 1 */}
               <div className="relative p-6 bg-white rounded-xl shadow-lg border border-primary-100 transform transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
                 <div className="absolute -top-6 left-6 bg-gradient-to-br from-primary-500 to-primary-600 p-3 rounded-lg shadow-lg">
@@ -119,6 +119,25 @@ function Home() {
                   </p>
                   <Link to="/analyzer" className="mt-4 inline-flex items-center text-sm font-medium text-secondary-600 hover:text-secondary-700">
                     Analyze ingredients
+                    <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Feature 3 - Daily Routine */}
+              <div className="relative p-6 bg-white rounded-xl shadow-lg border border-purple-100 transform transition-all duration-300 hover:shadow-xl hover:-translate-y-2">
+                <div className="absolute -top-6 left-6 bg-gradient-to-br from-purple-500 to-purple-600 p-3 rounded-lg shadow-lg">
+                  <CalendarIcon className="h-6 w-6 text-white" />
+                </div>
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mt-2">Daily Skincare Routine</h3>
+                  <p className="mt-3 text-base text-gray-600">
+                    Get a personalized daily skincare routine based on your skin type, concerns, and climate. Our AI builds a comprehensive morning and evening regimen tailored just for you.
+                  </p>
+                  <Link to="/routine" className="mt-4 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700">
+                    Create your routine
                     <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>

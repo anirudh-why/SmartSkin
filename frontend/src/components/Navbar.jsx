@@ -29,6 +29,7 @@ function Navbar() {
     { name: 'Home', path: '/' },
     { name: 'Recommender', path: '/recommender' },
     { name: 'Analyzer', path: '/analyzer' },
+    { name: 'Routine', path: '/routine' },
     { name: 'About', path: '/about' },
   ];
 
