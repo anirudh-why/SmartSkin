@@ -4,9 +4,14 @@ import base64
 from models.skincare_recommender import SkincareRecommender
 from models.ingredients_analyzer import IngredientsAnalyzer
 from models.routine_recommender import RoutineRecommender
+from models.user import User
+import jwt
 
 # Create blueprint for API routes
 api = Blueprint('api', __name__)
+
+# Initialize User model
+user_model = User()
 
 # Define file paths
 data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'cosmetic_p.csv')
@@ -207,4 +212,166 @@ def get_routine_recommendations():
         })
     
     except Exception as e:
-        return jsonify({'error': str(e), 'success': False}), 500 
+        return jsonify({'error': str(e), 'success': False}), 500
+
+@api.route('/auth/register', methods=['POST'])
+def register():
+    """Register a new user."""
+    data = request.json
+    
+    if not data or not all(k in data for k in ('email', 'password', 'name')):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    try:
+        result, status_code = user_model.register(
+            email=data['email'],
+            password=data['password'],
+            name=data['name']
+        )
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api.route('/auth/login', methods=['POST'])
+def login():
+    """Login user."""
+    data = request.json
+    
+    if not data or not all(k in data for k in ('email', 'password')):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    try:
+        result, status_code = user_model.login(
+            email=data['email'],
+            password=data['password']
+        )
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api.route('/auth/request-reset', methods=['POST'])
+def request_password_reset():
+    """Request a password reset link."""
+    data = request.json
+    
+    if not data or 'email' not in data:
+        return jsonify({'error': 'Email is required'}), 400
+    
+    try:
+        result, status_code = user_model.generate_reset_token(data['email'])
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api.route('/auth/reset-password', methods=['POST'])
+def reset_password():
+    """Reset password using a token."""
+    data = request.json
+    
+    if not data or not all(k in data for k in ('token', 'newPassword')):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    try:
+        result, status_code = user_model.reset_password(
+            token=data['token'],
+            new_password=data['newPassword']
+        )
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@api.route('/auth/verify', methods=['POST'])
+def verify_token():
+    """Verify JWT token."""
+    data = request.json
+    
+    if not data or 'token' not in data:
+        return jsonify({'error': 'No token provided'}), 400
+    
+    try:
+        result = user_model.verify_token(data['token'])
+        if isinstance(result, dict) and 'error' in result:
+            return jsonify(result), 401
+        return jsonify({'valid': True, 'user': result}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Auth-related helper functions
+def extract_token(request):
+    auth_header = request.headers.get('Authorization')
+    if not auth_header or not auth_header.startswith('Bearer '):
+        return None
+    return auth_header.split(' ')[1]
+
+def get_current_user(request):
+    token = extract_token(request)
+    if not token:
+        return None
+    
+    payload = user_model.verify_token(token)
+    if isinstance(payload, dict) and 'error' in payload:
+        return None
+    
+    return payload.get('email')
+
+# Profile Endpoints
+@api.route('/user/profile', methods=['GET'])
+def get_profile():
+    """Get user profile information."""
+    email = get_current_user(request)
+    if not email:
+        return jsonify({"error": "Authentication required"}), 401
+    
+    try:
+        user_profile, status_code = user_model.get_user_profile(email)
+        return jsonify(user_profile), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/user/preferences', methods=['PUT'])
+def update_preferences():
+    """Update user preferences."""
+    email = get_current_user(request)
+    if not email:
+        return jsonify({"error": "Authentication required"}), 401
+    
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    try:
+        result, status_code = user_model.update_preferences(email, data)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Routine Endpoints
+@api.route('/user/routines', methods=['GET'])
+def get_user_routines():
+    """Get user saved routines."""
+    email = get_current_user(request)
+    if not email:
+        return jsonify({"error": "Authentication required"}), 401
+    
+    try:
+        result, status_code = user_model.get_routines(email)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/user/routines', methods=['POST'])
+def save_user_routine():
+    """Save a routine for the user."""
+    email = get_current_user(request)
+    if not email:
+        return jsonify({"error": "Authentication required"}), 401
+    
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+    
+    try:
+        result, status_code = user_model.save_routine(email, data)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500 

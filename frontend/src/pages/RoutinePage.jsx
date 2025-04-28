@@ -1,16 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { BeakerIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
-import { CloudIcon, FireIcon } from '@heroicons/react/24/solid';
+import { BeakerIcon, SunIcon, MoonIcon, BookmarkIcon } from '@heroicons/react/24/outline';
+import { CloudIcon, FireIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
 import Select from 'react-select';
 import Button from '../components/Button';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 function RoutinePage() {
+  const { saveRoutine } = useAuth();
   const [loading, setLoading] = useState(false);
   const [metadata, setMetadata] = useState(null);
   const [routine, setRoutine] = useState(null);
   const [error, setError] = useState(null);
   const [ageRange, setAgeRange] = useState('18-30');
+  const [routineName, setRoutineName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   
   // Form state for user input
   const [formData, setFormData] = useState({
@@ -45,6 +51,14 @@ function RoutinePage() {
     
     fetchMetadata();
   }, []);
+
+  // Reset saved state when routine changes
+  useEffect(() => {
+    setIsSaved(false);
+    if (routine) {
+      setRoutineName(`My ${formData.skin_type} Skin Routine`);
+    }
+  }, [routine, formData.skin_type]);
   
   const handleSkinTypeChange = (e) => {
     setFormData({ ...formData, skin_type: e.target.value });
@@ -73,11 +87,16 @@ function RoutinePage() {
       setFormData({ ...formData, age: selected.age });
     }
   };
+
+  const handleRoutineNameChange = (e) => {
+    setRoutineName(e.target.value);
+  };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setIsSaved(false);
     
     try {
       const response = await axios.post('/api/routine/recommendations', formData);
@@ -90,8 +109,53 @@ function RoutinePage() {
     } catch (err) {
       console.error('Error fetching routine:', err);
       setError('Could not generate routine. Please try again later.');
+      toast.error('Could not generate routine. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveRoutine = async () => {
+    if (!routine) return;
+    
+    setIsSaving(true);
+    
+    try {
+      // Extract steps from morning, evening, and weekly routines
+      const morningSteps = routine.morning.map(item => item.step);
+      const eveningSteps = routine.evening.map(item => item.step);
+      const weeklySteps = routine.weekly.map(item => `${item.step} (${item.frequency})`);
+      
+      // Extract all products if they exist
+      const products = [
+        ...routine.morning
+          .filter(item => item.product_recommendations)
+          .flatMap(item => item.product_recommendations.map(product => `${product.brand} - ${product.name}`)),
+        ...routine.evening
+          .filter(item => item.product_recommendations)
+          .flatMap(item => item.product_recommendations.map(product => `${product.brand} - ${product.name}`))
+      ];
+      
+      // Prepare routine data
+      const routineData = {
+        name: routineName || `My ${formData.skin_type} Skin Routine`,
+        steps: [
+          ...morningSteps.map(step => `Morning: ${step}`),
+          ...eveningSteps.map(step => `Evening: ${step}`),
+          ...weeklySteps.map(step => `Weekly: ${step}`)
+        ],
+        products: products
+      };
+      
+      // Save routine to backend
+      await saveRoutine(routineData);
+      setIsSaved(true);
+      toast.success('Routine saved successfully!');
+    } catch (error) {
+      console.error('Error saving routine:', error);
+      toast.error('Failed to save routine. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
   
@@ -199,26 +263,24 @@ function RoutinePage() {
           {/* Allergies */}
           <div>
             <label htmlFor="allergies" className="block text-gray-700 font-medium mb-2">
-              Any ingredients you're allergic to? (comma-separated)
+              Do you have any allergies or ingredients to avoid? (comma separated)
             </label>
             <input
               type="text"
-              id="allergies"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              placeholder="e.g., Fragrance, Alcohol, Sulfates"
+              name="allergies"
+              placeholder="e.g. Fragrance, Alcohol, Sulfates"
+              className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               onChange={handleAllergiesChange}
             />
           </div>
           
           {/* Climate */}
           <div>
-            <label className="block text-gray-700 font-medium mb-2">
-              What's your climate?
-            </label>
+            <label className="block text-gray-700 font-medium mb-2">What is your climate?</label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {metadata.climate_options.map((climate) => (
                 <label key={climate} className={`
-                  flex items-center justify-center p-3 border-2 rounded-lg cursor-pointer transition duration-200
+                  flex items-center p-3 border-2 rounded-lg cursor-pointer transition duration-200
                   ${formData.climate === climate 
                     ? 'border-primary-500 bg-primary-50 text-primary-700' 
                     : 'border-gray-200 hover:border-primary-200 hover:bg-primary-50/50'
@@ -261,9 +323,45 @@ function RoutinePage() {
       <div id="results" className={`${routine ? 'block' : 'hidden'}`}>
         {routine && (
           <div className="bg-white rounded-xl shadow-md p-6 mb-12">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">
-              Your Personalized Skincare Routine
-            </h2>
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-2xl font-semibold text-gray-800">
+                Your Personalized Skincare Routine
+              </h2>
+              
+              {/* Save Routine Button */}
+              <div>
+                {isSaved ? (
+                  <div className="flex items-center text-green-600">
+                    <CheckCircleIcon className="h-5 w-5 mr-1" />
+                    <span>Saved</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col">
+                    <div className="mb-2">
+                      <input
+                        type="text"
+                        placeholder="Routine Name"
+                        value={routineName}
+                        onChange={handleRoutineNameChange}
+                        className="w-full border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      />
+                    </div>
+                    <button
+                      onClick={handleSaveRoutine}
+                      disabled={isSaving}
+                      className="flex items-center justify-center bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+                    >
+                      {isSaving ? 'Saving...' : (
+                        <>
+                          <BookmarkIcon className="h-5 w-5 mr-1" />
+                          Save Routine
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
             
             {/* Morning Routine */}
             <div className="mb-10">
