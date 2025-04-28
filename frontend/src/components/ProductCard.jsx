@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { StarIcon } from '@heroicons/react/24/solid';
+import ProductFeedback from './ProductFeedback';
+import { useAuth } from '../contexts/AuthContext';
 
 function ProductCard({ product }) {
   const [showIngredients, setShowIngredients] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // Generate a random pastel color for brand badges
   const generatePastelColor = (seed) => {
@@ -50,6 +53,12 @@ function ProductCard({ product }) {
         {showIngredients && (
           <div className="mt-2 p-2 bg-gray-50 rounded-md text-xs text-gray-600 max-h-32 overflow-y-auto">
             {product.ingredients}
+          </div>
+        )}
+        
+        {isAuthenticated && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <ProductFeedback product={product} />
           </div>
         )}
       </div>

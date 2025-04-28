@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
+import ProductHistory from '../components/ProductHistory';
 
 const Dashboard = () => {
     const { user, fetchUserProfile, fetchRoutines } = useAuth();
@@ -270,6 +271,11 @@ const Dashboard = () => {
                             ))}
                         </div>
                     )}
+                </div>
+                
+                {/* Recently Viewed Products */}
+                <div className="mb-8">
+                    <ProductHistory limit={5} />
                 </div>
                 
                 {/* Feature cards */}

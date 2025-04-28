@@ -189,6 +189,43 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const fetchUserFeedback = async (silent = false) => {
+        try {
+            const response = await apiClient.get('/api/user/feedback');
+            return response.data.feedback || [];
+        } catch (error) {
+            if (!silent) {
+                toast.error('Failed to fetch feedback history');
+            }
+            console.error('Error fetching feedback:', error);
+            return [];
+        }
+    };
+
+    const saveProductFeedback = async (feedbackData) => {
+        try {
+            const response = await apiClient.post('/api/user/feedback', feedbackData);
+            toast.success('Feedback saved successfully');
+            return response.data;
+        } catch (error) {
+            toast.error('Failed to save feedback');
+            throw error;
+        }
+    };
+
+    const fetchProductHistory = async (limit = 20, silent = false) => {
+        try {
+            const response = await apiClient.get(`/api/user/history?limit=${limit}`);
+            return response.data.product_history || [];
+        } catch (error) {
+            if (!silent) {
+                toast.error('Failed to fetch product history');
+            }
+            console.error('Error fetching product history:', error);
+            return [];
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -202,7 +239,10 @@ export const AuthProvider = ({ children }) => {
             updatePreferences,
             fetchRoutines,
             saveRoutine,
-            apiClient
+            apiClient,
+            fetchUserFeedback,
+            saveProductFeedback,
+            fetchProductHistory
         }}>
             {children}
         </AuthContext.Provider>

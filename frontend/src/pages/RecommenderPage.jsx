@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import Select from 'react-select';
 import Button from '../components/Button';
 import ProductCard from '../components/ProductCard';
+import { useAuth } from '../contexts/AuthContext';
 
 function RecommenderPage() {
+  const { apiClient, isAuthenticated } = useAuth();
   const [metadata, setMetadata] = useState({
     skin_types: [],
     categories: [],
@@ -24,12 +25,13 @@ function RecommenderPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showResults, setShowResults] = useState(false);
+  const [usingPersonalization, setUsingPersonalization] = useState(true);
   
   // Fetch metadata for form options
   useEffect(() => {
     const fetchMetadata = async () => {
       try {
-        const response = await axios.get('/api/recommender/metadata');
+        const response = await apiClient.get('/api/recommender/metadata');
         setMetadata(response.data);
         
         // Set default skin type
@@ -46,7 +48,7 @@ function RecommenderPage() {
     };
     
     fetchMetadata();
-  }, []);
+  }, [apiClient]);
   
   const handleSkinTypeChange = (e) => {
     setFormData({
@@ -68,7 +70,13 @@ function RecommenderPage() {
     setError(null);
     
     try {
-      const response = await axios.post('/api/recommender/recommendations', formData);
+      // Include a flag to update product history
+      const requestData = {
+        ...formData,
+        update_history: true
+      };
+      
+      const response = await apiClient.post('/api/recommender/recommendations', requestData);
       setRecommendations(response.data.recommendations);
       setShowResults(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -99,6 +107,11 @@ function RecommenderPage() {
         <p className="mt-3 max-w-2xl mx-auto text-lg text-gray-500">
           Find the perfect skincare products based on your unique needs and preferences.
         </p>
+        {isAuthenticated && (
+          <p className="mt-2 text-sm text-primary-600">
+            Recommendations are personalized based on your feedback and browsing history
+          </p>
+        )}
       </div>
       
       {error && (
@@ -195,6 +208,22 @@ function RecommenderPage() {
                   />
                 </div>
               </div>
+              
+              {isAuthenticated && (
+                <div className="flex items-center">
+                  <input
+                    id="use-personalization"
+                    name="use-personalization"
+                    type="checkbox"
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    checked={usingPersonalization}
+                    onChange={() => setUsingPersonalization(!usingPersonalization)}
+                  />
+                  <label htmlFor="use-personalization" className="ml-2 block text-sm text-gray-700">
+                    Use my previous feedback to personalize recommendations
+                  </label>
+                </div>
+              )}
               
               <div className="pt-3">
                 <Button type="submit" fullWidth disabled={loading}>

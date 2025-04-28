@@ -90,8 +90,21 @@ def get_recommendations():
     if not data:
         return jsonify({'error': 'No data provided'}), 400
     
-    # Validate input data
     try:
+        # Get current user if authenticated
+        email = get_current_user(request)
+        user_feedback = None
+        user_history = None
+        
+        # If user is authenticated, get their feedback and history for personalization
+        if email:
+            feedback_result, _ = user_model.get_user_feedback(email)
+            user_feedback = feedback_result.get('feedback', [])
+            
+            history_result, _ = user_model.get_product_history(email)
+            user_history = history_result.get('product_history', [])
+        
+        # Validate input data
         user_prefs = {
             'skin_type': data.get('skin_type', 'Normal'),
             'skin_concerns': data.get('skin_concerns', []),
@@ -101,7 +114,22 @@ def get_recommendations():
         }
         
         rec = get_recommender()
-        recommendations = rec.get_recommendations(user_prefs)
+        recommendations = rec.get_recommendations(
+            user_prefs=user_prefs,
+            user_feedback=user_feedback,
+            user_history=user_history
+        )
+        
+        # If user is authenticated, update their product history with these recommendations
+        if email and data.get('update_history', True):
+            for product in recommendations:
+                history_data = {
+                    'product_id': product['id'],
+                    'product_name': product['name'],
+                    'category': product['label']
+                }
+                user_model._update_product_history(email, history_data)
+        
         return jsonify({'recommendations': recommendations})
     
     except Exception as e:
@@ -372,6 +400,52 @@ def save_user_routine():
     
     try:
         result, status_code = user_model.save_routine(email, data)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Feedback Endpoints
+@api.route('/user/feedback', methods=['POST'])
+def submit_feedback():
+    """Submit feedback for a product recommendation."""
+    email = get_current_user(request)
+    if not email:
+        return jsonify({"error": "Authentication required"}), 401
+    
+    data = request.json
+    if not data or not all(k in data for k in ('product_id', 'product_name')):
+        return jsonify({"error": "Missing required product information"}), 400
+    
+    try:
+        result, status_code = user_model.save_product_feedback(email, data)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/user/feedback', methods=['GET'])
+def get_feedback():
+    """Get all feedback provided by the user."""
+    email = get_current_user(request)
+    if not email:
+        return jsonify({"error": "Authentication required"}), 401
+    
+    try:
+        result, status_code = user_model.get_user_feedback(email)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@api.route('/user/history', methods=['GET'])
+def get_history():
+    """Get the user's product viewing history."""
+    email = get_current_user(request)
+    if not email:
+        return jsonify({"error": "Authentication required"}), 401
+    
+    limit = request.args.get('limit', 20, type=int)
+    
+    try:
+        result, status_code = user_model.get_product_history(email, limit)
         return jsonify(result), status_code
     except Exception as e:
         return jsonify({"error": str(e)}), 500 
