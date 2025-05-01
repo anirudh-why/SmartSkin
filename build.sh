@@ -2,6 +2,9 @@
 
 echo "Building the SmartSkin application for production..."
 
+# Set execution permissions
+chmod +x build.sh
+
 # Navigate to frontend directory and build
 cd frontend
 echo "Installing frontend dependencies..."

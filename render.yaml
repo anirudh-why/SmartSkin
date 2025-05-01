@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: smartskin
+    env: python
+    buildCommand: ./build.sh
+    startCommand: cd backend && gunicorn --bind 0.0.0.0:$PORT app:create_app()
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.9.0 
