@@ -1,6 +1,7 @@
 import os
 import sys
-from flask import Flask, send_from_directory, jsonify
+import glob
+from flask import Flask, send_from_directory, jsonify, render_template_string
 from flask_cors import CORS
 from api.routes import api
 
@@ -11,6 +12,7 @@ def create_app():
     
     # Print debugging info about paths
     print(f"Current working directory: {os.getcwd()}")
+    print(f"App file location: {__file__}")
     print(f"Frontend build directory: {frontend_build_dir}")
     print(f"Directory exists: {os.path.exists(frontend_build_dir)}")
     if os.path.exists(frontend_build_dir):
@@ -34,12 +36,35 @@ def create_app():
     # Debug route to check if the server is running
     @app.route('/api/status')
     def status():
+        frontend_files = []
+        if os.path.exists(frontend_build_dir):
+            frontend_files = glob.glob(os.path.join(frontend_build_dir, '*'))
+        
         return jsonify({
             'status': 'running',
             'python_version': sys.version,
             'env': os.environ.get('FLASK_ENV', 'not set'),
             'static_folder': app.static_folder,
-            'static_folder_exists': os.path.exists(app.static_folder) if app.static_folder else False
+            'static_folder_exists': os.path.exists(app.static_folder) if app.static_folder else False,
+            'frontend_build_dir': frontend_build_dir,
+            'frontend_build_exists': os.path.exists(frontend_build_dir),
+            'frontend_files': frontend_files
+        })
+    
+    # Force-create a minimal index.html if needed (for testing)
+    @app.route('/api/create-index')
+    def create_index():
+        if not os.path.exists(frontend_build_dir):
+            os.makedirs(frontend_build_dir, exist_ok=True)
+        
+        index_path = os.path.join(frontend_build_dir, 'index.html')
+        with open(index_path, 'w') as f:
+            f.write('<html><body><h1>SmartSkin</h1><p>Generated index.html</p></body></html>')
+        
+        return jsonify({
+            'success': True,
+            'path': index_path,
+            'exists': os.path.exists(index_path)
         })
     
     # Serve React frontend in production
@@ -57,16 +82,17 @@ def create_app():
                 return send_from_directory(app.static_folder, 'index.html')
             else:
                 print(f"Index.html not found at {index_path}")
-                return f"""
+                return render_template_string('''
                 <html>
                 <head><title>SmartSkin</title></head>
                 <body>
                     <h1>SmartSkin API Server</h1>
                     <p>The server is running, but the frontend build was not found.</p>
                     <p>Please check <a href="/api/status">/api/status</a> for more information.</p>
+                    <p>You can attempt to create an index.html file by visiting <a href="/api/create-index">/api/create-index</a>.</p>
                 </body>
                 </html>
-                """
+                ''')
 
     return app
 
