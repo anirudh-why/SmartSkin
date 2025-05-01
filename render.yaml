@@ -5,7 +5,9 @@ services:
     buildCommand: |
       chmod +x build.sh
       chmod +x diagnose.sh
-      ./build.sh
+      chmod +x minimal-build.sh
+      chmod +x force-build.sh
+      ./build.sh || ./minimal-build.sh || ./force-build.sh
     preDeployCommand: ./diagnose.sh
     startCommand: cd backend && gunicorn --bind 0.0.0.0:$PORT app:app
     envVars:

@@ -50,7 +50,7 @@ cat > package.json.new << EOL
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "npx react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -92,9 +92,25 @@ export DISABLE_ESLINT_PLUGIN=true
 export ESLINT_NO_DEV_ERRORS=true
 export CI=false  # Prevents build failures on warnings
 
-# Build the frontend
+# Build the frontend using npx to avoid permission issues
 echo "Building frontend..."
-npm run build || { echo "Frontend build failed"; exit 1; }
+echo "Setting permissions on node_modules/.bin"
+chmod -R 755 node_modules/.bin || echo "Warning: Could not set permissions on node_modules/.bin"
+
+# Try multiple build approaches
+echo "Trying direct npx build..."
+npx react-scripts build || {
+  echo "Direct npx failed, trying global install..."
+  npm install -g react-scripts
+  echo "Building with global react-scripts..."
+  react-scripts build || {
+    echo "Global install failed, trying node_modules path..."
+    node_modules/.bin/react-scripts build || {
+      echo "All build attempts failed!"
+      exit 1
+    }
+  }
+}
 
 # Check if build directory was created
 if [ ! -d "build" ]; then
