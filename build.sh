@@ -143,12 +143,12 @@ if [ -d "../frontend/build" ]; then
   echo "✓ Frontend build directory exists at ../frontend/build"
   ls -la ../frontend/build
   
-  # If index.html exists, copy the frontend build to a location the backend can access
+  # If index.html exists, check file permissions
   if [ -f "../frontend/build/index.html" ]; then
     echo "✓ Frontend index.html exists"
     # Make sure static folder is properly configured
-    echo "Copying frontend build to ensure backend can access it..."
-    cp -r ../frontend/build/* ../frontend/build/  # This ensures permissions are correct
+    echo "Setting proper permissions on frontend build..."
+    chmod -R 755 ../frontend/build || echo "Warning: Could not set permissions on frontend build"
   else
     echo "⚠️ No index.html found in frontend build!"
   fi

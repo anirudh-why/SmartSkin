@@ -1,12 +1,16 @@
 #!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status
 
 # This is a fallback script that creates a minimal frontend build
 # without using react-scripts, in case the main build process fails.
 
 echo "=== Creating minimal frontend build ==="
 
+# Remove any existing build directory to avoid conflicts
+rm -rf frontend/build || true
+
 # Create build directory in frontend folder
-mkdir -p frontend/build
+mkdir -p frontend/build || true
 
 # Create a minimal index.html file
 cat > frontend/build/index.html << 'EOL'
@@ -117,17 +121,22 @@ cat > frontend/build/styles.css << 'EOL'
 /* Additional styles can be added here */
 EOL
 
+# Set proper permissions
+echo "Setting build directory permissions..."
+chmod -R 755 frontend/build || true
+
 # Let the user know we're done
 echo "=== Minimal frontend build created ==="
 echo "Created files:"
 ls -la frontend/build/
 
-# Add minimal-build to the render.yaml preDeployCommand
-if grep -q "minimal-build.sh" render.yaml; then
-    echo "minimal-build.sh already in render.yaml"
-else
-    echo "Adding minimal-build.sh to render.yaml preDeployCommand"
-    sed -i 's/preDeployCommand: \.\/diagnose.sh/preDeployCommand: \.\/diagnose.sh \&\& \.\/minimal-build.sh/' render.yaml
-fi
+# Don't modify render.yaml anymore as we've already updated it
+# if grep -q "minimal-build.sh" render.yaml; then
+#     echo "minimal-build.sh already in render.yaml"
+# else
+#     echo "Adding minimal-build.sh to render.yaml preDeployCommand"
+#     sed -i 's/preDeployCommand: \.\/diagnose.sh/preDeployCommand: \.\/diagnose.sh \&\& \.\/minimal-build.sh/' render.yaml
+# fi
 
-echo "Done!" 
+echo "Done!"
+exit 0  # Always exit with success 

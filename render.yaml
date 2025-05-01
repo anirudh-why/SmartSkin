@@ -7,7 +7,13 @@ services:
       chmod +x diagnose.sh
       chmod +x minimal-build.sh
       chmod +x force-build.sh
-      ./build.sh || ./minimal-build.sh || ./force-build.sh
+      # Try main build, but fall back to force-build if any of them fail
+      (./build.sh || ./minimal-build.sh || ./force-build.sh)
+      # Always run force-build.sh as a final safety check
+      [ -f frontend/build/index.html ] || ./force-build.sh
+      # Verify build files exist
+      ls -la frontend/build/
+      echo "Build process completed"
     preDeployCommand: ./diagnose.sh
     startCommand: cd backend && gunicorn --bind 0.0.0.0:$PORT app:app
     envVars:

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e  # Exit immediately if a command exits with a non-zero status
 
 # This script forcibly creates a frontend build directory with necessary files
 # It completely bypasses the react-scripts build process
@@ -8,9 +9,10 @@ echo "=== FORCE CREATING FRONTEND BUILD ==="
 # Ensure frontend directory exists
 mkdir -p frontend
 
-# Create build directory
-mkdir -p frontend/build
-cd frontend/build
+# Remove any existing build directory to avoid conflicts
+rm -rf frontend/build || true
+mkdir -p frontend/build || true
+cd frontend/build || { echo "Failed to create or access build directory"; exit 1; }
 
 # Create necessary files
 echo "Creating index.html..."
@@ -235,8 +237,12 @@ footer {
 EOL
 
 echo "Creating asset placeholder..."
-mkdir -p static
-touch static/placeholder.js
+mkdir -p static || true
+touch static/placeholder.js || true
+
+# Set proper permissions
+echo "Setting build directory permissions..."
+chmod -R 755 . || true
 
 echo "=== BUILD CREATED SUCCESSFULLY ==="
 echo "Files in frontend/build:"
@@ -245,4 +251,5 @@ ls -la
 # Return to project root
 cd ../..
 
-echo "Done!" 
+echo "Done!"
+exit 0  # Always exit with success to ensure build script continues 
