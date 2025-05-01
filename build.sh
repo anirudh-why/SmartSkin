@@ -9,7 +9,15 @@ chmod +x build.sh
 cd frontend
 echo "Installing frontend dependencies..."
 npm install
+
+# Fix package.json build script for Linux environment
+echo "Fixing build script for deployment environment..."
+sed -i 's/"build": "set DISABLE_ESLINT_PLUGIN=true && set ESLINT_NO_DEV_ERRORS=true && react-scripts build"/"build": "DISABLE_ESLINT_PLUGIN=true ESLINT_NO_DEV_ERRORS=true react-scripts build"/' package.json
+echo "Modified package.json build script for Linux compatibility"
+
 echo "Building frontend..."
+export DISABLE_ESLINT_PLUGIN=true
+export ESLINT_NO_DEV_ERRORS=true
 npm run build
 
 # Create necessary directories if they don't exist

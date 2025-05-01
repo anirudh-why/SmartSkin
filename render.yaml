@@ -2,10 +2,22 @@ services:
   - type: web
     name: smartskin
     env: python
-    buildCommand: ./build.sh
+    buildCommand: |
+      # Install npm and node
+      curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+      apt-get install -y nodejs
+      # Execute build script
+      chmod +x build.sh
+      ./build.sh
     startCommand: cd backend && gunicorn --bind 0.0.0.0:$PORT app:app
     envVars:
       - key: FLASK_ENV
         value: production
       - key: PYTHON_VERSION
-        value: 3.9.0 
+        value: 3.9.0
+      - key: NODE_ENV
+        value: production
+      - key: DISABLE_ESLINT_PLUGIN
+        value: "true"
+      - key: ESLINT_NO_DEV_ERRORS
+        value: "true" 
