@@ -31,8 +31,10 @@ def create_app():
 
     return app
 
+# Create a gunicorn-compatible app instance
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     # Set debug to False in production
     debug_mode = os.environ.get('FLASK_ENV') == 'development'
     port = int(os.environ.get('PORT', 5000))
