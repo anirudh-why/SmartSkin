@@ -139,14 +139,23 @@ def get_recommendations():
 def analyze_image():
     """Analyze a product image to extract ingredients and predict suitability."""
     if 'image' not in request.json:
-        return jsonify({'error': 'No image provided'}), 400
+        return jsonify({'error': 'No image provided', 'success': False}), 400
     
     try:
         # Get base64 encoded image from request
         image_data = base64.b64decode(request.json['image'].split(',')[1] if ',' in request.json['image'] else request.json['image'])
         
-        # Analyze the image
+        # Get analyzer instance
         a = get_analyzer()
+        
+        # Check if models are loaded
+        if not a.models_loaded:
+            return jsonify({
+                'success': False,
+                'error': 'Models not loaded. Please ensure that the ML models are properly installed.'
+            }), 503
+        
+        # Analyze the image
         result = a.analyze_image(image_data)
         return jsonify(result)
     
@@ -157,7 +166,7 @@ def analyze_image():
 def analyze_ingredients_text():
     """Analyze ingredients text to predict suitability for different skin types."""
     if 'ingredients' not in request.json:
-        return jsonify({'error': 'No ingredients text provided'}), 400
+        return jsonify({'error': 'No ingredients text provided', 'success': False}), 400
     
     try:
         ingredients_text = request.json['ingredients']
@@ -166,8 +175,8 @@ def analyze_ingredients_text():
         if not a.models_loaded:
             return jsonify({
                 'success': False,
-                'error': 'Models not loaded. Cannot analyze ingredients.'
-            }), 500
+                'error': 'Models not loaded. Please ensure that the ML models are properly installed.'
+            }), 503
         
         # Analyze ingredients text
         suitability_scores = a.predict_suitability(ingredients_text)
@@ -189,7 +198,7 @@ def analyze_ingredients_text():
         })
     
     except Exception as e:
-        return jsonify({'error': str(e), 'success': False}), 500
+        return jsonify({'error': f"Failed to analyze ingredients: {str(e)}", 'success': False}), 500
 
 @api.route('/routine/metadata', methods=['GET'])
 def get_routine_metadata():

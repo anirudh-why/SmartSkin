@@ -8,8 +8,10 @@ import secrets
 class User:
     def __init__(self):
         # Connect to MongoDB
-        self.client = MongoClient("mongodb+srv://anirudhwhy:Anirudh123@cluster0.7njg8ao.mongodb.net/smartskin")
-        self.db = self.client.smartskin
+        # Get MongoDB connection string from environment variable or use a fallback for development
+        mongo_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/smartskin')
+        self.client = MongoClient(mongo_uri)
+        self.db = self.client.get_database()  # Get the database from the connection string
         self.users = self.db.users
         self.secret_key = os.getenv('JWT_SECRET_KEY', 'your-secret-key')  # In production, use environment variable
 
@@ -47,11 +49,13 @@ class User:
         # Find user
         user = self.users.find_one({"email": email})
         if not user:
-            return {"error": "User not found"}, 404
+            # For security, use the same error message for both cases
+            # to avoid leaking information about existing users
+            return {"error": "Invalid email or password"}, 401
 
         # Verify password
         if not bcrypt.checkpw(password.encode('utf-8'), user['password']):
-            return {"error": "Invalid password"}, 401
+            return {"error": "Invalid email or password"}, 401
 
         # Generate JWT token
         token = self.generate_token(email)

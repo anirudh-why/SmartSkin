@@ -20,9 +20,8 @@ const Login = () => {
             if (result.success) {
                 navigate('/dashboard');
             } else {
-                // Handle specific error cases
-                if (result.error === 'User not found') {
-                    setError('No account exists with this email. Please register first.');
+                if (result.error === 'Invalid email or password') {
+                    setError('Invalid email or password. Please check your credentials or register if you don\'t have an account.');
                 } else {
                     setError(result.error || 'Login failed');
                 }

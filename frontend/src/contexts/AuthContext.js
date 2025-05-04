@@ -97,8 +97,8 @@ export const AuthProvider = ({ children }) => {
             const errorMessage = error.response?.data?.error || 'Login failed';
             setError(errorMessage);
             
-            // Don't show toast for expected errors like 'User not found' or 'Invalid password'
-            if (errorMessage !== 'User not found' && errorMessage !== 'Invalid password') {
+            // Don't show toast for expected auth errors
+            if (errorMessage !== 'Invalid email or password') {
                 toast.error(errorMessage);
             }
             

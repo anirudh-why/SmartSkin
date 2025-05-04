@@ -4,6 +4,10 @@ import glob
 from flask import Flask, send_from_directory, jsonify, render_template_string
 from flask_cors import CORS
 from api.routes import api
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 def create_app():
     """Create and configure the Flask application."""
