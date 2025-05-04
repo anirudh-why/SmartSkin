@@ -4,10 +4,6 @@ import glob
 from flask import Flask, send_from_directory, jsonify, render_template_string
 from flask_cors import CORS
 from api.routes import api
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
 
 def create_app():
     """Create and configure the Flask application."""
@@ -104,7 +100,7 @@ def create_app():
 app = create_app()
 
 if __name__ == '__main__':
-    # Set debug to False in production
-    debug_mode = os.environ.get('FLASK_ENV') == 'development'
-    port = int(os.environ.get('PORT', 5000))
+    # Use a fixed debug mode and port
+    debug_mode = True
+    port = 5000
     app.run(debug=debug_mode, host='0.0.0.0', port=port) 

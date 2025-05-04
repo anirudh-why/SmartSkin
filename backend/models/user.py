@@ -7,13 +7,11 @@ import secrets
 
 class User:
     def __init__(self):
-        # Connect to MongoDB
-        # Get MongoDB connection string from environment variable or use a fallback for development
-        mongo_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/smartskin')
-        self.client = MongoClient(mongo_uri)
-        self.db = self.client.get_database()  # Get the database from the connection string
+        # Connect to MongoDB directly
+        self.client = MongoClient("mongodb+srv://anirudhwhy:Anirudh123@cluster0.7njg8ao.mongodb.net/smartskin")
+        self.db = self.client.smartskin
         self.users = self.db.users
-        self.secret_key = os.getenv('JWT_SECRET_KEY', 'your-secret-key')  # In production, use environment variable
+        self.secret_key = "your-secret-key"  # Hardcoded JWT secret key for now
 
     def register(self, email, password, name):
         # Check if user already exists

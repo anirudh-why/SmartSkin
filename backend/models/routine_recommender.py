@@ -100,25 +100,33 @@ class RoutineRecommender:
         self.model = None
         self.encoder = None
         
-        # Initialize/load model if paths are provided
-        if data_path and model_path:
-            self.initialize_model()
+        # Initialize/load model if paths are provided - but don't fail if not found
+        try:
+            if data_path and model_path:
+                self.initialize_model()
+        except Exception as e:
+            print(f"Error initializing routine model: {e}")
+            print("Using rule-based recommendations without ML model")
     
     def initialize_model(self):
         """Initialize or load the trained model."""
-        model_file = os.path.join(self.model_path, 'routine_model.pkl')
-        encoder_file = os.path.join(self.model_path, 'routine_encoder.pkl')
-        
-        if os.path.exists(model_file) and os.path.exists(encoder_file):
-            # Load existing model
-            self.model = joblib.load(model_file)
-            self.encoder = joblib.load(encoder_file)
-        else:
-            # Train new model if data is available
-            if os.path.exists(self.data_path):
-                self.train_model()
+        try:
+            model_file = os.path.join(self.model_path, 'routine_model.pkl')
+            encoder_file = os.path.join(self.model_path, 'routine_encoder.pkl')
+            
+            if os.path.exists(model_file) and os.path.exists(encoder_file):
+                # Load existing model
+                self.model = joblib.load(model_file)
+                self.encoder = joblib.load(encoder_file)
+                print("✓ Loaded existing routine model")
             else:
-                print(f"Warning: Training data not found at {self.data_path}")
+                # Train new model if data is available
+                if os.path.exists(self.data_path):
+                    self.train_model()
+                else:
+                    print(f"Warning: Training data not found at {self.data_path}")
+        except Exception as e:
+            print(f"Error in model initialization: {e}")
     
     def train_model(self):
         """Train a model to predict routine steps based on user data."""

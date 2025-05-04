@@ -25,47 +25,39 @@ routine_recommender = None
 def get_recommender():
     global recommender
     if recommender is None:
-        print(f"Initializing recommender with data from: {data_path}")
-        if not os.path.exists(data_path):
-            # Try to find the CSV file in other locations
-            possible_csv_paths = [
-                # Parent directory
-                os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'cosmetic_p.csv'),
-                # Root directory (two levels up)
-                os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'cosmetic_p.csv'),
-                # Absolute path from workspace root
-                os.path.join(os.path.abspath(os.sep), 'c:', 'Users', 'aniru', 'OneDrive', 'Desktop', 'SmartSkin', 'cosmetic_p.csv')
-            ]
-            
-            for source_path in possible_csv_paths:
-                if os.path.exists(source_path):
-                    try:
-                        # Ensure the data directory exists
-                        os.makedirs(os.path.dirname(data_path), exist_ok=True)
-                        import shutil
-                        shutil.copy(source_path, data_path)
-                        print(f"✓ Copied CSV from {source_path} to {data_path}")
-                        break
-                    except Exception as e:
-                        print(f"Error copying CSV: {e}")
-        
-        if not os.path.exists(data_path):
-            raise FileNotFoundError(f"Could not find or copy cosmetic_p.csv to {data_path}")
-            
-        recommender = SkincareRecommender(data_path)
+        try:
+            print(f"Initializing recommender with data from: {data_path}")
+            recommender = SkincareRecommender(data_path)
+            print("✓ Recommender initialized successfully")
+        except Exception as e:
+            print(f"Error initializing recommender: {e}")
+            # Try to create with a dummy path
+            recommender = SkincareRecommender("dummy_path.csv")
     return recommender
 
 def get_analyzer():
     global analyzer
     if analyzer is None:
-        analyzer = IngredientsAnalyzer(models_dir)
+        try:
+            analyzer = IngredientsAnalyzer(models_dir)
+            print("✓ Analyzer initialized successfully")
+        except Exception as e:
+            print(f"Error initializing analyzer: {e}")
+            # Create with default models_dir to ensure it works with dummy models
+            analyzer = IngredientsAnalyzer("./")
     return analyzer
 
 def get_routine_recommender():
     global routine_recommender
     if routine_recommender is None:
-        routine_data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'routine_data.csv')
-        routine_recommender = RoutineRecommender(data_path=routine_data_path, model_path=models_dir)
+        try:
+            routine_data_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'routine_data.csv')
+            routine_recommender = RoutineRecommender(data_path=routine_data_path, model_path=models_dir)
+            print("✓ Routine recommender initialized successfully")
+        except Exception as e:
+            print(f"Error initializing routine recommender: {e}")
+            # Create with fallback paths
+            routine_recommender = RoutineRecommender(data_path="dummy_path.csv", model_path="./")
     return routine_recommender
 
 @api.route('/recommender/metadata', methods=['GET'])
