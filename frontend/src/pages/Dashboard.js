@@ -111,7 +111,7 @@ const Dashboard = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-primary-50 to-white pt-16">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1">
                 {/* Welcome Header */}
                 <div className="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
                     <div className="bg-gradient-to-r from-primary-600 to-secondary-500 py-6 px-6 md:px-8">
@@ -120,7 +120,7 @@ const Dashboard = () => {
                                 <h2 className="text-2xl md:text-3xl font-bold">
                                     Welcome back, {userName}!
                                 </h2>
-                                <p className="mt-1 text-primary-100">{profile?.email}</p>
+                                {/* <p className="mt-1 text-primary-100">{profile?.email}</p> */}
                             </div>
                             <div className="mt-4 md:mt-0 flex space-x-3">
                                 <Link

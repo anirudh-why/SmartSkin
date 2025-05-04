@@ -27,9 +27,10 @@ function Navbar() {
     return location.pathname === path;
   };
 
+  // Modified nav links: Home and Dashboard first
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
+    ...(isAuthenticated ? [{ name: 'Dashboard', path: '/dashboard' }] : []),
   ];
 
   // Only show these links to authenticated users
@@ -39,8 +40,11 @@ function Navbar() {
     { name: 'Routine', path: '/routine' },
   ];
 
-  // Get all relevant navigation links
-  const activeNavLinks = [...navLinks, ...(isAuthenticated ? authNavLinks : [])];
+  // About link always at the end
+  const aboutLink = { name: 'About', path: '/about' };
+
+  // Get all relevant navigation links with About at the end
+  const activeNavLinks = [...navLinks, ...(isAuthenticated ? authNavLinks : []), aboutLink];
 
   return (
     <nav className={`fixed w-full top-0 z-50 transition-all duration-300 ${
@@ -76,16 +80,6 @@ function Navbar() {
             {/* Authentication buttons */}
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <Link
-                  to="/dashboard"
-                  className={`${
-                    isActive('/dashboard')
-                      ? 'border-b-2 border-primary-500 text-primary-700 font-semibold'
-                      : 'border-transparent text-gray-600 hover:text-primary-600 hover:border-b-2 hover:border-primary-300'
-                  } inline-flex items-center px-3 py-1 text-sm font-medium transition-all duration-200 h-16`}
-                >
-                  Dashboard
-                </Link>
                 <button
                   onClick={logout}
                   className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 border border-gray-300"
@@ -148,28 +142,15 @@ function Navbar() {
 
             {/* Authentication mobile links */}
             {isAuthenticated ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  className={`${
-                    isActive('/dashboard')
-                      ? 'bg-gradient-to-r from-primary-50 to-secondary-50 border-l-4 border-primary-500 text-primary-700 font-medium'
-                      : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-l-4 hover:border-primary-300 hover:text-primary-600'
-                  } block pl-3 pr-4 py-2 text-base transition-all duration-200`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={() => {
-                    logout();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left border-transparent text-gray-500 hover:bg-gray-50 hover:border-l-4 hover:border-primary-300 hover:text-primary-600 block pl-3 pr-4 py-2 text-base transition-all duration-200"
-                >
-                  Logout
-                </button>
-              </>
+              <button
+                onClick={() => {
+                  logout();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full text-left border-transparent text-gray-500 hover:bg-gray-50 hover:border-l-4 hover:border-primary-300 hover:text-primary-600 block pl-3 pr-4 py-2 text-base transition-all duration-200"
+              >
+                Logout
+              </button>
             ) : (
               <>
                 <Link
@@ -191,8 +172,10 @@ function Navbar() {
           </div>
         </div>
       )}
+
+
     </nav>
   );
 }
 
-export default Navbar; 
+export default Navbar;

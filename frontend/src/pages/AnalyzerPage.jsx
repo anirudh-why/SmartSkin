@@ -61,10 +61,15 @@ function AnalyzerPage() {
         ingredients: ingredients
       });
       
+      if (response.data.success === false) {
+        setError(response.data.error || 'Failed to analyze ingredients. Please try again.');
+        return;
+      }
+      
       setAnalysisResults(response.data);
     } catch (err) {
       console.error('Error analyzing ingredients:', err);
-      setError('Failed to analyze ingredients. Please try again.');
+      setError(err.response?.data?.error || 'Failed to analyze ingredients. Please try again. Make sure the server is running and the models are properly loaded.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -88,7 +93,7 @@ function AnalyzerPage() {
       }
     } catch (err) {
       console.error('Error analyzing image:', err);
-      setError('Failed to analyze image. Please try again.');
+      setError(err.response?.data?.error || 'Failed to analyze image. Please make sure the server is running and models are properly loaded.');
     } finally {
       setIsAnalyzing(false);
     }

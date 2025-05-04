@@ -96,7 +96,12 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             const errorMessage = error.response?.data?.error || 'Login failed';
             setError(errorMessage);
-            toast.error(errorMessage);
+            
+            // Don't show toast for expected errors like 'User not found' or 'Invalid password'
+            if (errorMessage !== 'User not found' && errorMessage !== 'Invalid password') {
+                toast.error(errorMessage);
+            }
+            
             return { success: false, error: errorMessage };
         }
     };

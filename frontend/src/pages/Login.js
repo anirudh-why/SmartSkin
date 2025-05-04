@@ -20,10 +20,15 @@ const Login = () => {
             if (result.success) {
                 navigate('/dashboard');
             } else {
-                setError(result.error || 'Login failed');
+                // Handle specific error cases
+                if (result.error === 'User not found') {
+                    setError('No account exists with this email. Please register first.');
+                } else {
+                    setError(result.error || 'Login failed');
+                }
             }
         } catch (err) {
-            setError('An error occurred during login');
+            setError('An error occurred during login. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -51,6 +56,13 @@ const Login = () => {
                         <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 rounded-md" role="alert">
                             <p className="font-medium">Error</p>
                             <p>{error}</p>
+                            {error.includes('register') && (
+                                <p className="mt-2">
+                                    <Link to="/register" className="font-medium text-red-700 underline">
+                                        Create an account
+                                    </Link>
+                                </p>
+                            )}
                         </div>
                     )}
                     
