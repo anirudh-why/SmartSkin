@@ -4,19 +4,19 @@ services:
     env: python
     buildCommand: |
       sudo apt-get update && sudo apt-get install -y tesseract-ocr
-      chmod +x build.sh
-      chmod +x diagnose.sh
-      chmod +x minimal-build.sh
-      chmod +x force-build.sh
+      chmod +x smartskin-app/build.sh
+      chmod +x smartskin-app/diagnose.sh
+      chmod +x smartskin-app/minimal-build.sh
+      chmod +x smartskin-app/force-build.sh
       # Try main build, but fall back to force-build if any of them fail
-      (./build.sh || ./minimal-build.sh || ./force-build.sh)
+      (smartskin-app/build.sh || smartskin-app/minimal-build.sh || smartskin-app/force-build.sh)
       # Always run force-build.sh as a final safety check
-      [ -f frontend/build/index.html ] || ./force-build.sh
+      [ -f smartskin-app/frontend/build/index.html ] || smartskin-app/force-build.sh
       # Verify build files exist
-      ls -la frontend/build/
+      ls -la smartskin-app/frontend/build/
       echo "Build process completed"
-    preDeployCommand: ./diagnose.sh
-    startCommand: cd backend && gunicorn --bind 0.0.0.0:$PORT app:app
+    preDeployCommand: smartskin-app/diagnose.sh
+    startCommand: cd smartskin-app/backend && gunicorn --bind 0.0.0.0:$PORT app:app
     envVars:
       - key: FLASK_ENV
         value: production
