@@ -4,6 +4,9 @@ from typing import List, Dict
 from difflib import get_close_matches
 import re
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 class SkincareRecommender:
     def __init__(self, data_path: str):
@@ -11,12 +14,12 @@ class SkincareRecommender:
         try:
             if os.path.exists(data_path):
                 self.df = pd.read_csv(data_path)
-                print(f"✓ Loaded skincare dataset from {data_path}")
+                logging.info(f"✓ Loaded skincare dataset from {data_path}")
             else:
-                print(f"Dataset not found at {data_path}. Creating dummy data.")
+                logging.warning(f"Dataset not found at {data_path}. Creating dummy data.")
                 self._create_dummy_data()
         except Exception as e:
-            print(f"Error loading dataset: {e}. Creating dummy data.")
+            logging.error(f"Error loading dataset: {e}. Creating dummy data.")
             self._create_dummy_data()
             
         self.skin_types = ['Oily', 'Dry', 'Combination', 'Normal', 'Sensitive']
@@ -85,7 +88,7 @@ class SkincareRecommender:
             })
         
         self.df = pd.DataFrame(data)
-        print("Created dummy skincare products dataset for testing")
+        logging.info("Created dummy skincare products dataset for testing")
     
     def get_recommendations(self, user_prefs: Dict, user_feedback: List[Dict] = None, user_history: List[Dict] = None) -> List[Dict]:
         """Generate product recommendations based on user preferences and feedback history."""
@@ -206,4 +209,4 @@ class SkincareRecommender:
     
     def get_common_ingredients(self):
         """Return common ingredients."""
-        return self.common_ingredients 
+        return self.common_ingredients

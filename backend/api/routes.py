@@ -163,20 +163,27 @@ def analyze_ingredients_text():
     try:
         ingredients_text = request.json['ingredients']
         
+        # Get analyzer instance
         a = get_analyzer()
+        
+        # Check if models are loaded
         if not a.models_loaded:
+            print("Warning: Models not loaded in analyzer")
             return jsonify({
                 'success': False,
-                'error': 'Models not loaded. Please ensure that the ML models are properly installed.'
+                'error': 'Models not loaded. Please ensure that the ML models are properly installed.',
+                'details': 'Check if the model files exist in the models/trained directory'
             }), 503
         
         # Analyze ingredients text
         suitability_scores = a.predict_suitability(ingredients_text)
         
         if "error" in suitability_scores:
+            print(f"Error in prediction: {suitability_scores['error']}")
             return jsonify({
                 'success': False,
-                'error': suitability_scores["error"]
+                'error': suitability_scores["error"],
+                'details': 'There was an error processing the ingredients text'
             }), 500
         
         # Find the most suitable skin type
@@ -190,7 +197,12 @@ def analyze_ingredients_text():
         })
     
     except Exception as e:
-        return jsonify({'error': f"Failed to analyze ingredients: {str(e)}", 'success': False}), 500
+        print(f"Unexpected error in analyze_ingredients_text: {str(e)}")
+        return jsonify({
+            'error': f"Failed to analyze ingredients: {str(e)}", 
+            'success': False,
+            'details': 'An unexpected error occurred while processing your request'
+        }), 500
 
 @api.route('/routine/metadata', methods=['GET'])
 def get_routine_metadata():

@@ -35,12 +35,12 @@ function ProductCard({ product }) {
         <p className="text-sm text-gray-500 mb-2">{product.label}</p>
         
         <div className="flex justify-between items-center mb-3">
-          <div className="text-sm font-medium text-gray-900">
+          {/* <div className="text-sm font-medium text-gray-900">
             {product.price > 0 ? `$${product.price}` : 'Price N/A'}
-          </div>
-          <div className="text-sm text-primary-600">
+          </div> */}
+          {/* <div className="text-sm text-primary-600">
             Match Score: {Math.round(product.score)}
-          </div>
+          </div> */}
         </div>
         
         <button

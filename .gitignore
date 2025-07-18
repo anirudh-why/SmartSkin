@@ -72,4 +72,12 @@ coverage/
 
 # Misc
 .DS_Store
-Thumbs.db 
+Thumbs.db __pycache__/
+.env
+*.pkl
+*.csv
+*.ipynb
+backend/static/
+backend/data/
+backend/models/trained/
+

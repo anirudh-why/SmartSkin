@@ -4,6 +4,9 @@ import glob
 from flask import Flask, send_from_directory, jsonify, render_template_string
 from flask_cors import CORS
 from api.routes import api
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def create_app():
     """Create and configure the Flask application."""
@@ -11,12 +14,12 @@ def create_app():
     frontend_build_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend', 'build'))
     
     # Print debugging info about paths
-    print(f"Current working directory: {os.getcwd()}")
-    print(f"App file location: {__file__}")
-    print(f"Frontend build directory: {frontend_build_dir}")
-    print(f"Directory exists: {os.path.exists(frontend_build_dir)}")
+    logging.info(f"Current working directory: {os.getcwd()}")
+    logging.info(f"App file location: {__file__}")
+    logging.info(f"Frontend build directory: {frontend_build_dir}")
+    logging.info(f"Directory exists: {os.path.exists(frontend_build_dir)}")
     if os.path.exists(frontend_build_dir):
-        print(f"Contents: {os.listdir(frontend_build_dir)}")
+        logging.info(f"Contents: {os.listdir(frontend_build_dir)}")
     
     app = Flask(__name__, static_folder=frontend_build_dir)
     CORS(app)  # Enable CORS for all routes
@@ -27,11 +30,11 @@ def create_app():
     # Create data directory if it doesn't exist
     data_dir = os.path.join(os.path.dirname(__file__), 'data')
     os.makedirs(data_dir, exist_ok=True)
-    print(f"✓ Data directory: {data_dir}")
+    logging.info(f"✓ Data directory: {data_dir}")
     
     model_dir = os.path.join(os.path.dirname(__file__), 'models', 'trained')
     os.makedirs(model_dir, exist_ok=True)
-    print(f"✓ Models directory: {model_dir}")
+    logging.info(f"✓ Models directory: {model_dir}")
     
     # Debug route to check if the server is running
     @app.route('/api/status')
@@ -71,17 +74,17 @@ def create_app():
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
     def serve(path):
-        print(f"Serving path: {path}")
+        logging.info(f"Serving path: {path}")
         if path and os.path.exists(os.path.join(app.static_folder, path)):
-            print(f"Serving file from static folder: {path}")
+            logging.info(f"Serving file from static folder: {path}")
             return send_from_directory(app.static_folder, path)
         else:
             index_path = os.path.join(app.static_folder, 'index.html')
             if os.path.exists(index_path):
-                print(f"Serving index.html")
+                logging.info(f"Serving index.html")
                 return send_from_directory(app.static_folder, 'index.html')
             else:
-                print(f"Index.html not found at {index_path}")
+                logging.warning(f"Index.html not found at {index_path}")
                 return render_template_string('''
                 <html>
                 <head><title>SmartSkin</title></head>
@@ -103,4 +106,4 @@ if __name__ == '__main__':
     # Use a fixed debug mode and port
     debug_mode = True
     port = 5000
-    app.run(debug=debug_mode, host='0.0.0.0', port=port) 
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)

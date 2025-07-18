@@ -63,13 +63,18 @@ function AnalyzerPage() {
       
       if (response.data.success === false) {
         setError(response.data.error || 'Failed to analyze ingredients. Please try again.');
+        if (response.data.details) {
+          console.error('Analysis error details:', response.data.details);
+        }
         return;
       }
       
       setAnalysisResults(response.data);
     } catch (err) {
       console.error('Error analyzing ingredients:', err);
-      setError(err.response?.data?.error || 'Failed to analyze ingredients. Please try again. Make sure the server is running and the models are properly loaded.');
+      const errorMessage = err.response?.data?.error || 'Failed to analyze ingredients.';
+      const errorDetails = err.response?.data?.details || 'Please make sure the server is running and the models are properly loaded.';
+      setError(`${errorMessage} ${errorDetails}`);
     } finally {
       setIsAnalyzing(false);
     }

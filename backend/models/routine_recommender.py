@@ -6,6 +6,9 @@ import json
 import joblib
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import OneHotEncoder
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 class RoutineRecommender:
     def __init__(self, data_path: str = None, model_path: str = None):
@@ -105,8 +108,8 @@ class RoutineRecommender:
             if data_path and model_path:
                 self.initialize_model()
         except Exception as e:
-            print(f"Error initializing routine model: {e}")
-            print("Using rule-based recommendations without ML model")
+            logging.warning(f"Error initializing routine model: {e}")
+            logging.info("Using rule-based recommendations without ML model")
     
     def initialize_model(self):
         """Initialize or load the trained model."""
@@ -118,22 +121,22 @@ class RoutineRecommender:
                 # Load existing model
                 self.model = joblib.load(model_file)
                 self.encoder = joblib.load(encoder_file)
-                print("✓ Loaded existing routine model")
+                logging.info("✓ Loaded existing routine model")
             else:
                 # Train new model if data is available
                 if os.path.exists(self.data_path):
                     self.train_model()
                 else:
-                    print(f"Warning: Training data not found at {self.data_path}")
+                    logging.warning(f"Training data not found at {self.data_path}")
         except Exception as e:
-            print(f"Error in model initialization: {e}")
+            logging.error(f"Error in model initialization: {e}")
     
     def train_model(self):
         """Train a model to predict routine steps based on user data."""
         try:
             # In a real implementation, this would use the training data
             # For this example, we'll create a simple rule-based model
-            print("Training routine recommendation model...")
+            logging.info("Training routine recommendation model...")
             
             # Create a simple random forest classifier as a placeholder
             self.model = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -143,10 +146,10 @@ class RoutineRecommender:
             os.makedirs(self.model_path, exist_ok=True)
             joblib.dump(self.model, os.path.join(self.model_path, 'routine_model.pkl'))
             joblib.dump(self.encoder, os.path.join(self.model_path, 'routine_encoder.pkl'))
-            print("Model trained and saved successfully")
+            logging.info("Model trained and saved successfully")
             
         except Exception as e:
-            print(f"Error training model: {str(e)}")
+            logging.error(f"Error training model: {str(e)}")
     
     def get_personalized_routine(self, user_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -340,4 +343,4 @@ class RoutineRecommender:
                                 for _, product in top_products.iterrows()
                             ]
         
-        return result 
+        return result
